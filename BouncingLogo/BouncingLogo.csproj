@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net48</TargetFramework>
@@ -6,11 +6,19 @@
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="sudowoodo.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="sudowoodo.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="System.Management" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="sudowoodo.png">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+	  <Compile Update="BouncingLogoScreensaver.cs">
+	    <SubType>Form</SubType>
+	  </Compile>
 	</ItemGroup>
 </Project>

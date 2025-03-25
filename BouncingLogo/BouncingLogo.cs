@@ -2,16 +2,15 @@
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Threading.Tasks;
 using System.Diagnostics;
 
-class TempGlass : Form
+class BouncingLogo : Form
 {
-    private Panel drawingPanel;
     private Timer updateTimer;
-    private int[] directionStatic = { 2, 1 };
+    private int[] directionStatic = { 1, 2 };
     private int[] directionDynamic;
     private Image pngImage;
+    private bool blackBackground = true;
 
     // Constants for window styles
     private const int WS_EX_LAYERED = 0x00080000;
@@ -30,7 +29,12 @@ class TempGlass : Form
     private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, int crKey, byte bAlpha, int dwFlags);
 
     [DllImport("user32.dll", SetLastError = true)]
+
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll")]
+    static extern bool GetWindowRect(IntPtr hWnd, out Rectangle lpRect);
+
 
     private static readonly IntPtr HWND_BOTTOM = new IntPtr(1); // Moves window to the bottom
     private const uint SWP_NOSIZE = 0x0001;
@@ -49,46 +53,85 @@ class TempGlass : Form
         }
     }
 
-    public TempGlass()
+    public BouncingLogo()
     {
         this.directionDynamic = (int[])this.directionStatic.Clone();
         int middleWidth = Screen.PrimaryScreen.Bounds.Width / 2;
         int middleHeight = Screen.PrimaryScreen.Bounds.Height / 2;
+
+        this.DoubleBuffered = true;
         this.FormBorderStyle = FormBorderStyle.None;
         this.MinimumSize = new Size(1, 1);
         this.Size = new Size(100, 100);
-        //this.BackColor = Color.Transparent;
-
-
         this.ShowInTaskbar = false;
-        this.Padding = new Padding(0);
-        this.AutoSize = false;
+        this.StartPosition = FormStartPosition.Manual;
+        this.WindowState = FormWindowState.Maximized;  // Fullscreen
+        this.FormBorderStyle = FormBorderStyle.None;  // No border
+        this.TopMost = true;
 
         this.Location = new Point(middleWidth - this.Size.Width / 2, middleHeight - this.Size.Height / 2);
-        this.Load += new EventHandler(LoadWindow);
         this.Text = "Bouncing";
-        this.StartPosition = FormStartPosition.Manual;
+
+        if (blackBackground)
+        {
+            this.BackColor = Color.Black;
+        }
 
         this.SendToBack();
 
-        // Set the position to the top middle of the screen
         pngImage = Image.FromFile("./sudowoodo.png");
-
-        // Add the panel witht he contents
-        drawingPanel = new Panel
-        {
-            Size = new Size(100, 100),
-            Location = new Point(0, 0),
-            BackColor = Color.Transparent,
-        };
-        drawingPanel.Paint += new PaintEventHandler(DrawPanel); // Add paint callback
-        this.Controls.Add(drawingPanel);
 
         // Adda  timer for async updates
         updateTimer = new Timer();
         updateTimer.Interval = 10;
         updateTimer.Tick += UpdateTimer_Tick;
         updateTimer.Start();
+
+        this.Load += new EventHandler(LoadWindow);
+    }
+
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        if (blackBackground)
+        {
+            base.OnPaintBackground(e);
+        }
+        else
+        {
+
+            Bitmap background = CaptureBackground();
+
+            if (background != null)
+            {
+                e.Graphics.DrawImage(background, new Rectangle(0, 0, this.Width, this.Height));
+            }
+        }
+        e.Graphics.DrawImage(pngImage, new Rectangle(0, 0, 100, 100));
+
+    }
+
+    public Bitmap CaptureBackground()
+    {
+        GetWindowRect(this.Handle, out Rectangle rect);
+
+        int width = (int) Math.Floor(this.Bounds.Width * 1.50);
+        int height = (int) Math.Floor(this.Bounds.Height * 1.50);
+        int left = (int)Math.Floor(this.Bounds.X * 1.5);
+        int top = (int)Math.Floor(this.Bounds.Y * 1.5);
+
+        // Capture screen behind window
+        Bitmap bmp = new Bitmap(width, height);
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            // uncomment oapcity for flickering otherwise will be blurred issue is it captures it self
+            //this.Opacity = 0;
+            g.Clear(Color.Transparent);
+            g.CopyFromScreen(left, top, 0, 0, bmp.Size);
+            //this.Opacity = 1;
+
+        }
+
+        return bmp;
     }
 
     private async void UpdateTimer_Tick(object sender, EventArgs e)
@@ -97,12 +140,14 @@ class TempGlass : Form
         {
             if (this.directionDynamic[0] > 0)
             {
-                this.Location = new Point(this.Location.X + 1, this.Location.Y);
+                Point point = new Point(this.Location.X + 1, this.Location.Y);
+                this.Location = point;
                 this.directionDynamic[0]--;
             }
             else
             {
-                this.Location = new Point(this.Location.X - 1, this.Location.Y);
+                Point point = new Point(this.Location.X - 1, this.Location.Y);
+                this.Location = point;
                 this.directionDynamic[0]++;
             }
         }
@@ -110,12 +155,14 @@ class TempGlass : Form
         {
             if (this.directionDynamic[1] > 0)
             {
-                this.Location = new Point(this.Location.X, this.Location.Y + 1);
+                Point point = new Point(this.Location.X, this.Location.Y + 1);
+                this.Location = point;
                 this.directionDynamic[1]--;
             }
             else
             {
-                this.Location = new Point(this.Location.X, this.Location.Y - 1);
+                Point point = new Point(this.Location.X, this.Location.Y - 1);
+                this.Location = point;
                 this.directionDynamic[1]++;
             }
         }
@@ -137,14 +184,9 @@ class TempGlass : Form
             this.directionStatic[1] = -this.directionStatic[1];
             this.directionDynamic[1] = this.directionStatic[1];
         }
+        this.Refresh();
     }
 
-    // Updating the panel when need be
-    private void DrawPanel(object sender, PaintEventArgs e)
-    {
-        Graphics g = e.Graphics;
-        g.DrawImage(pngImage, new Rectangle(0, 0, 100, 100));
-    }
 
     // Processing creating the windows
     private void LoadWindow(object sender, EventArgs e)
@@ -156,11 +198,12 @@ class TempGlass : Form
 
         SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
     }
-
+    /*
     [STAThread]
     static void Main()
     {
         System.Windows.Forms.Application.EnableVisualStyles();
-        System.Windows.Forms.Application.Run(new TempGlass());
+        System.Windows.Forms.Application.Run(new BouncingLogo());
     }
+    */
 }
