@@ -1,25 +1,32 @@
+# Bouncing Logo
 
-Add the .png to the folder and rename is sudowoodo.png
+Create your own bouncing screensaver with an image file!
 
-Compile the program, by either the shell script, dockerfile or manually
+<img alt="Sudowoodo screensaver" src="./media/screensaver.png" width="450" />
 
+## Prerequitsites
 
+-   Installed dotnet
+-   x64 Windows system
 
-## For just setting it as a screensaver
+## Setting up manually (for your own image)
 
-then fetch the .exe from `BouncingLogo\bin\Release\net48\win-x64` and rename to .scr
+1) Run `.\build.bat {path\to\image}` in this folder
 
+Then follow the steps from the next section
 
-    Move it to C:\Windows\System32
+## Setting up a screensaver
 
- Set It as the Screensaver
+1) Copy the .exe from `BouncingLogo\bin\Release\net48\win-x64` and rename to .scr
 
-    Right-click the desktop → Personalize
+2) Move it to `C:\Windows\System32`
 
-    Go to Lock Screen → Screen saver settings
+3) Now set It as the Screensaver right-click the desktop → Personalize
 
-    Select your screensaver from the list
+4) Go to Lock Screen → Screen saver settings
 
-    Click Apply & OK
+5) Select your screensaver from the list
 
-    you'll have a bouncing logo screen saver
+6) Click Apply & OK
+
+**You'll now have a bouncing logo screen saver**

@@ -37,41 +37,17 @@ class BouncingLogoScreensaver : Form
     [DllImport("user32.dll")]
     static extern bool GetWindowRect(IntPtr hWnd, out Rectangle lpRect);
 
-    private const uint SWP_NOSIZE = 0x0001;
-    private const uint SWP_NOMOVE = 0x0002;
-    private const uint SWP_NOACTIVATE = 0x0010;
-    private const uint SWP_SHOWWINDOW = 0x0040;
-
-    // Override method to hide the form from alt-tab [https://www.csharp411.com/hide-form-from-alttab/]
-    protected override CreateParams CreateParams
-    {
-        get
-        {
-            CreateParams cp = base.CreateParams;
-            cp.ExStyle |= 0x80;
-            return cp;
-        }
-    }
-
     public BouncingLogoScreensaver()
     {
         this.directionDynamic = (int[])this.directionStatic.Clone();
-        int middleWidth = Screen.PrimaryScreen.Bounds.Width / 2;
-        int middleHeight = Screen.PrimaryScreen.Bounds.Height / 2;
-
         this.FormBorderStyle = FormBorderStyle.None;
-        this.MinimumSize = new Size(1, 1);
-       // this.ShowInTaskbar = false;
         this.StartPosition = FormStartPosition.Manual;
         this.DoubleBuffered = true;
-
         this.Location = new Point(0,0);
         this.Text = "Bouncing";
-
-        this.WindowState = FormWindowState.Maximized;  // Fullscreen
-        this.FormBorderStyle = FormBorderStyle.None;  // No border
+        this.WindowState = FormWindowState.Maximized;
+        this.FormBorderStyle = FormBorderStyle.None;
         this.TopMost = true;
-
         this.BackColor = Color.Black;
         Cursor.Hide();
 
@@ -89,7 +65,7 @@ class BouncingLogoScreensaver : Form
         pngImage = LoadImageFromResources("BouncingLogo.sudowoodo.png");
 
         this.KeyDown += (sender, e) => Application.Exit();
-        this.MouseMove += (sender, e) => Application.Exit();
+        //this.MouseMove += (sender, e) => Application.Exit(); // removed as too sensitive sometimes
         this.MouseClick += (sender, e) => Application.Exit();
 
         // Adda  timer for async updates
@@ -101,7 +77,7 @@ class BouncingLogoScreensaver : Form
         this.Load += new EventHandler(LoadWindow);
     }
 
-    private Image LoadImageFromResources(string resourceName)
+    private Image LoadImageFromResources(string resourceName) // Loaded this way so we can bundle image together
     {
         var assembly = Assembly.GetExecutingAssembly();
         using (Stream stream = assembly.GetManifestResourceStream(resourceName))
@@ -175,34 +151,28 @@ class BouncingLogoScreensaver : Form
         int currentStyle = GetWindowLong(hWnd, -20);
         SetWindowLong(hWnd, -20, currentStyle | WS_EX_LAYERED | WS_EX_TOPMOST);
         SetLayeredWindowAttributes(hWnd, 128, 255, LWA_ALPHA);
-
     }
 
     [STAThread]
     static void Main(string[] args)
     {
-        // Check command-line arguments
         if (args.Length > 0)
         {
             if (args[0] == "/s")
             {
-                // Start screensaver
                 Application.Run(new BouncingLogoScreensaver());
             }
             else if (args[0] == "/c")
             {
-                // Show configuration dialog (optional)
                 MessageBox.Show("Configuration not implemented.");
             }
             else if (args[0] == "/p")
             {
-                // Preview screensaver (optional)
                 Application.Run(new BouncingLogoScreensaver());
             }
         }
         else
         {
-            // Default screensaver behavior
             Application.Run(new BouncingLogoScreensaver());
         }
     }
